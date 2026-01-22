@@ -1,15 +1,41 @@
 import React from 'react';
-import Navbar from '../components/Navbar';
+import { useNavigate } from 'react-router-dom';
 
 export default function LandingPage() {
+  const navigate = useNavigate();
   const [isDragging, setIsDragging] = React.useState(false);
+  const fileInputRef = React.useRef(null);
 
-  const handleFileUpload = (e) => {
-    const files = e.target.files;
+  const handleFileSelection = (files) => {
     if (files && files.length > 0) {
-      console.log('Files uploaded:', files);
-      // Handle file upload logic here
+      // Extract folder name from webkitRelativePath if available
+      let folderName = "";
+      const firstFile = files[0];
+      
+      if (firstFile.webkitRelativePath) {
+        // Get the first folder name from the path
+        const pathParts = firstFile.webkitRelativePath.split('/');
+        if (pathParts.length > 1) {
+          folderName = pathParts[0];
+        }
+      }
+
+      // Pass files and folder name to upload page via state
+      navigate('/upload', { 
+        state: { 
+          selectedFiles: Array.from(files),
+          folderName: folderName
+        } 
+      });
     }
+  };
+
+  const handleUploadClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileInputChange = (e) => {
+    handleFileSelection(e.target.files);
   };
 
   const handleDragOver = (e) => {
@@ -25,53 +51,11 @@ export default function LandingPage() {
   const handleDrop = (e) => {
     e.preventDefault();
     setIsDragging(false);
-    
-    // Handle both files and folders
-    const items = e.dataTransfer.items;
-    const files = [];
-    
-    if (items) {
-      for (let i = 0; i < items.length; i++) {
-        if (items[i].kind === 'file') {
-          const entry = items[i].webkitGetAsEntry();
-          if (entry) {
-            traverseFileTree(entry, files);
-          }
-        }
-      }
-    } else {
-      // Fallback for older browsers
-      for (let i = 0; i < e.dataTransfer.files.length; i++) {
-        files.push(e.dataTransfer.files[i]);
-      }
-    }
-    
-    if (files.length > 0) {
-      console.log('Files/Folders dropped:', files);
-      // Handle dropped files/folders here
-    }
-  };
-
-  const traverseFileTree = (item, files) => {
-    if (item.isFile) {
-      item.file((file) => {
-        files.push(file);
-      });
-    } else if (item.isDirectory) {
-      const dirReader = item.createReader();
-      dirReader.readEntries((entries) => {
-        for (let i = 0; i < entries.length; i++) {
-          traverseFileTree(entries[i], files);
-        }
-      });
-    }
+    handleFileSelection(e.dataTransfer.files);
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-t from-blue-200 to-white">
-      {/* Navbar Component */}
-      <Navbar />
-
       {/* Hero Section */}
       <div className="flex flex-col items-center justify-center px-4 py-8 sm:py-12">
         <div className="text-center max-w-4xl mx-auto">
@@ -88,19 +72,20 @@ export default function LandingPage() {
 
           {/* Upload Button */}
           <div className="flex flex-col items-center gap-4">
-            <label 
-              htmlFor="file-upload" 
+            <button 
+              onClick={handleUploadClick}
               className="px-8 py-4 text-lg font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all cursor-pointer shadow-lg hover:shadow-xl transform hover:scale-105"
             >
-              Start Processing Invoices
-            </label>
+              Add Invoices
+            </button>
             <input
-              id="file-upload"
+              ref={fileInputRef}
               type="file"
               multiple
               webkitdirectory="true"
               directory="true"
-              onChange={handleFileUpload}
+              accept=".pdf,.jpg,.jpeg,.png,.gif"
+              onChange={handleFileInputChange}
               className="hidden"
             />
             <p className="text-sm text-gray-500 mb-8">
@@ -112,7 +97,7 @@ export default function LandingPage() {
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
-              className={`w-full max-w-2xl border-2 border-dashed rounded-xl p-12 transition-all ${
+              className={`w-full max-w-2xl border-2 border-dashed rounded-xl p-12 transition-all cursor-pointer ${
                 isDragging 
                   ? 'border-blue-500 bg-blue-50' 
                   : 'border-gray-300 bg-gray-50 hover:border-gray-400'
