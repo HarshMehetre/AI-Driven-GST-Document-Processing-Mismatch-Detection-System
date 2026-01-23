@@ -4,10 +4,10 @@ import { useLocation, useNavigate } from "react-router-dom";
 const UploadForm = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  
+
   // Initialize state from location.state if available
   const [clientName, setClientName] = useState(
-    location.state?.folderName || ""
+    location.state?.folderName || "",
   );
   const [month, setMonth] = useState("");
   const [files, setFiles] = useState(location.state?.selectedFiles || []);
@@ -28,8 +28,9 @@ const UploadForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!clientName.trim() || !month || files.length === 0) {
+      alert("❌ Please fill all fields and select at least one file!");
       setError("Please fill all fields and select files");
       return;
     }
@@ -41,11 +42,11 @@ const UploadForm = () => {
     try {
       // Convert month from YYYY-MM format to YYYY_MM format
       const formattedMonth = month.replace("-", "_");
-      
+
       const formData = new FormData();
       formData.append("client_name", clientName);
       formData.append("month", formattedMonth);
-      
+
       files.forEach((file) => {
         formData.append("files", file);
       });
@@ -61,7 +62,7 @@ const UploadForm = () => {
       }
 
       const result = await response.json();
-      
+
       setUploadStatus({
         success: true,
         message: result.message,
@@ -75,9 +76,8 @@ const UploadForm = () => {
 
       // Redirect to dashboard after 2 seconds
       setTimeout(() => {
-        navigate('/');
+        navigate("/");
       }, 2000);
-
     } catch (err) {
       setError(err.message || "An error occurred");
     } finally {
@@ -86,11 +86,11 @@ const UploadForm = () => {
   };
 
   const removeFile = (index) => {
-    setFiles(prev => prev.filter((_, i) => i !== index));
+    setFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleGoBack = () => {
-    navigate('/');
+    navigate("/");
   };
 
   return (
@@ -110,22 +110,26 @@ const UploadForm = () => {
             className="mt-2 w-full border-2 border-gray-300 rounded-md px-4 py-2 text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
             disabled={loading}
           />
-          <p className="text-xs text-gray-500 mt-1">Use underscores instead of spaces</p>
+          <p className="text-xs text-gray-500 mt-1">
+            Use underscores instead of spaces
+          </p>
         </div>
-
         {/* Month */}
         <div className="mt-6">
           <label className="block text-sm font-medium text-gray-700">
             Tax Period (Month) *
           </label>
           <input
-            type="month"
+            type="text"
+            placeholder="YYYY-MM"
             value={month}
             onChange={(e) => setMonth(e.target.value)}
             className="mt-2 w-full border-2 border-gray-300 rounded-md px-4 py-2 text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
             disabled={loading}
           />
-          <p className="text-xs text-gray-500 mt-1">Format: YYYY-MM</p>
+          <p className="text-xs text-gray-500 mt-1">
+            Enter the month and year in YYYY-MM format (e.g., 2026-01)
+          </p>
         </div>
 
         {/* Selected Files Summary */}
@@ -136,12 +140,25 @@ const UploadForm = () => {
             </label>
             <div className="space-y-2 max-h-48 overflow-y-auto bg-gray-50 p-4 rounded-lg border-2 border-gray-300">
               {files.map((file, index) => (
-                <div key={index} className="flex items-center justify-between bg-white p-3 rounded">
+                <div
+                  key={index}
+                  className="flex items-center justify-between bg-white p-3 rounded"
+                >
                   <div className="flex items-center flex-1 min-w-0">
-                    <svg className="w-5 h-5 text-blue-500 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M8 16a2 2 0 002-2V4a2 2 0 00-2-2H6a2 2 0 00-2 2v8a2 2 0 002 2h2zm-1-12h2v8h-2V4z" clipRule="evenodd" />
+                    <svg
+                      className="w-5 h-5 text-blue-500 mr-2 flex-shrink-0"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M8 16a2 2 0 002-2V4a2 2 0 00-2-2H6a2 2 0 00-2 2v8a2 2 0 002 2h2zm-1-12h2v8h-2V4z"
+                        clipRule="evenodd"
+                      />
                     </svg>
-                    <span className="text-sm text-gray-700 truncate">{file.name}</span>
+                    <span className="text-sm text-gray-700 truncate">
+                      {file.name}
+                    </span>
                   </div>
                   <button
                     type="button"
@@ -170,9 +187,15 @@ const UploadForm = () => {
         {/* Success Message */}
         {uploadStatus?.success && (
           <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
-            <p className="text-sm text-green-700 font-medium">{uploadStatus.message}</p>
-            <p className="text-sm text-green-600">{uploadStatus.fileCount} file(s) uploaded successfully</p>
-            <p className="text-xs text-green-600 mt-2">Redirecting to home page...</p>
+            <p className="text-sm text-green-700 font-medium">
+              {uploadStatus.message}
+            </p>
+            <p className="text-sm text-green-600">
+              {uploadStatus.fileCount} file(s) uploaded successfully
+            </p>
+            <p className="text-xs text-green-600 mt-2">
+              Redirecting to home page...
+            </p>
           </div>
         )}
 
@@ -188,7 +211,7 @@ const UploadForm = () => {
           </button>
           <button
             type="submit"
-            disabled={!clientName || !month || files.length === 0 || loading}
+            disabled={loading}
             className="flex-1 py-3 bg-blue-600 text-white font-semibold rounded-lg disabled:bg-gray-300 hover:bg-blue-700 transition"
           >
             {loading ? "Uploading..." : "Process Documents"}
