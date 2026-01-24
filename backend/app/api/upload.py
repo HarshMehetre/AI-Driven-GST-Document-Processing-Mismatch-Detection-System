@@ -39,16 +39,23 @@ async def upload_invoices(
         saved_files = []
 
         for file in files:
-            file_path = os.path.join(client_path, file.filename)
+            # Normalize path (Windows safety)
+            relative_path = file.filename.replace("\\", "/")
+
+            file_path = os.path.join(client_path, relative_path)
+
+            # 🔑 CREATE missing subfolders
+            os.makedirs(os.path.dirname(file_path), exist_ok=True)
+
             print(f"[UPLOAD] Saving file: {file.filename} to {file_path}", file=sys.stderr)
 
             content = await file.read()
             print(f"[UPLOAD] Read {len(content)} bytes from {file.filename}", file=sys.stderr)
-            
+
             with open(file_path, "wb") as f:
                 bytes_written = f.write(content)
                 print(f"[UPLOAD] Wrote {bytes_written} bytes to {file_path}", file=sys.stderr)
-            
+
             # Verify file was written
             if not os.path.exists(file_path):
                 print(f"[UPLOAD] ERROR: File not found after writing: {file_path}", file=sys.stderr)
